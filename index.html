@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Kiwi Ping - 1 Code Duy Nhất</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+      background: #f5f5f5;
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    /* Header gradient */
+    .header {
+      background: linear-gradient(135deg, #4CAF50, #43A047);
+      padding: 30px 20px 60px;
+      text-align: center;
+      color: white;
+      border-bottom-left-radius: 30px;
+      border-bottom-right-radius: 30px;
+      position: relative;
+      box-shadow: 0 8px 20px rgba(76,175,80,0.3);
+    }
+    .header h1 {
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      margin-bottom: 20px;
+    }
+    .ping-display {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .ping-label {
+      font-size: 14px;
+      opacity: 0.8;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .ping-value {
+      font-size: 72px;
+      font-weight: bold;
+      line-height: 1;
+      margin: 5px 0;
+      transition: color 0.3s;
+    }
+    .ping-unit {
+      font-size: 18px;
+      opacity: 0.85;
+    }
+    /* Main card */
+    .container {
+      padding: 0 16px;
+      margin-top: -30px;
+      position: relative;
+      z-index: 10;
+    }
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 24px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #4CAF50;
+      transition: background 0.3s;
+    }
+    .dot.active {
+      background: #FF5252;
+      box-shadow: 0 0 8px #FF5252;
+    }
+    .status-text {
+      font-size: 15px;
+      color: #555;
+      font-weight: 500;
+    }
+    .toggle-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .toggle-btn {
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      border: none;
+      background: #4CAF50;
+      color: white;
+      font-size: 18px;
+      font-weight: bold;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 20px rgba(76,175,80,0.4);
+      outline: none;
+      position: relative;
+      margin: 20px 0 10px;
+    }
+    .toggle-btn.active {
+      background: #FF5252;
+      box-shadow: 0 8px 20px rgba(255,82,82,0.5);
+      animation: pulse 0.8s infinite alternate;
+    }
+    @keyframes pulse {
+      from { transform: scale(1); }
+      to { transform: scale(1.08); }
+    }
+    .toggle-icon {
+      font-size: 40px;
+    }
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0;
+      border-top: 1px solid #eee;
+      margin-top: 10px;
+    }
+    .stat-item {
+      text-align: center;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: #999;
+    }
+    .stat-value {
+      font-size: 20px;
+      font-weight: bold;
+      color: #333;
+      margin-top: 4px;
+    }
+    /* Floating button */
+    .floating-btn {
+      position: fixed;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: #4CAF50;
+      color: white;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+      z-index: 1000;
+      cursor: pointer;
+      user-select: none;
+      touch-action: none;
+      border: 2px solid white;
+      transition: background 0.3s;
+    }
+    .floating-btn.active {
+      display: flex;
+      background: #FF5252;
+    }
+    .floating-btn:active {
+      transform: scale(0.95);
+    }
+    /* Permission dialog */
+    .permission-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+    .permission-box {
+      background: white;
+      border-radius: 20px;
+      padding: 25px;
+      width: 85%;
+      max-width: 340px;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+    .permission-box h2 {
+      color: #4CAF50;
+      margin-bottom: 12px;
+    }
+    .permission-box p {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+    .btn-allow {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 14px 30px;
+      border-radius: 30px;
+      font-weight: bold;
+      font-size: 16px;
+      width: 100%;
+      cursor: pointer;
+      margin-bottom: 8px;
+    }
+    .btn-deny {
+      background: transparent;
+      color: #999;
+      border: none;
+      padding: 10px;
+      width: 100%;
+      font-size: 14px;
+    }
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: white;
+      padding: 12px 25px;
+      border-radius: 25px;
+      font-size: 14px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      z-index: 3000;
+      pointer-events: none;
+    }
+    .toast.show {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <h1>Kiwi Ping</h1>
+    <div class="ping-display">
+      <span class="ping-label">PING</span>
+      <span class="ping-value" id="pingValue">25</span>
+      <span class="ping-unit">ms</span>
+    </div>
+  </div>
+
+  <!-- Main container -->
+  <div class="container">
+    <div class="card">
+      <div class="status-row">
+        <div class="dot" id="statusDot"></div>
+        <span class="status-text" id="statusText">Bình thường - Ping thấp</span>
+      </div>
+      <div class="toggle-section">
+        <button class="toggle-btn" id="toggleBtn">
+          <span class="toggle-icon">⏻</span>
+          <span id="btnLabel">BẬT</span>
+        </button>
+        <div style="color:#888; font-size:13px; margin-top:8px;">Bật để tăng ping lên 400ms</div>
+      </div>
+      <div class="stats">
+        <div class="stat-item">
+          <div class="stat-label">⬇ Download</div>
+          <div class="stat-value" id="downloadVal">25.0 Mbps</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">⬆ Upload</div>
+          <div class="stat-value" id="uploadVal">15.0 Mbps</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating button -->
+  <div class="floating-btn" id="floatingBtn">⚡</div>
+
+  <!-- Permission dialog (giả lập xin quyền) -->
+  <div class="permission-overlay" id="permissionOverlay">
+    <div class="permission-box">
+      <h2>🔔 Cho phép hiển thị nút nổi?</h2>
+      <p>Ứng dụng cần quyền hiển thị nút nổi để điều khiển nhanh. (Mô phỏng)</p>
+      <button class="btn-allow" onclick="allowPermission()">CHO PHÉP</button>
+      <button class="btn-deny" onclick="denyPermission()">Từ chối</button>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // --- State ---
+    let isHighPing = false;
+    let floatingVisible = false;
+    let permissionGranted = false;
+    let floatingDragging = false;
+    let floatStartX, floatStartY, floatInitialLeft, floatInitialTop;
+
+    // --- DOM elements ---
+    const pingValueEl = document.getElementById('pingValue');
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+    const toggleBtn = document.getElementById('toggleBtn');
+    const btnLabel = document.getElementById('btnLabel');
+    const downloadVal = document.getElementById('downloadVal');
+    const uploadVal = document.getElementById('uploadVal');
+    const floatingBtn = document.getElementById('floatingBtn');
+    const permissionOverlay = document.getElementById('permissionOverlay');
+    const toast = document.getElementById('toast');
+
+    // --- Helpers ---
+    function randomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function randomFloat(min, max) {
+      return (Math.random() * (max - min) + min).toFixed(1);
+    }
+
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    // --- Update UI based on ping mode ---
+    function updateUI() {
+      if (isHighPing) {
+        // Chế độ ping cao
+        const ping = randomInt(380, 420);
+        pingValueEl.textContent = ping;
+        pingValueEl.style.color = '#FF5252';
+        statusDot.classList.add('active');
+        statusText.textContent = 'Cao - Ping ~400ms';
+        statusText.style.color = '#FF5252';
+        toggleBtn.classList.add('active');
+        btnLabel.textContent = 'TẮT';
+        downloadVal.textContent = randomFloat(5, 8) + ' Mbps';
+        uploadVal.textContent = randomFloat(2, 4) + ' Mbps';
+        // Hiện nút nổi (nếu đã cấp quyền)
+        if (permissionGranted && !floatingVisible) {
+          floatingBtn.classList.add('active');
+          floatingVisible = true;
+          // Đặt vị trí mặc định góc phải giữa
+          floatingBtn.style.right = '20px';
+          floatingBtn.style.top = '50%';
+          floatingBtn.style.left = 'auto';
+          floatingBtn.style.bottom = 'auto';
+        }
+      } else {
+        // Bình thường
+        const ping = randomInt(20, 35);
+        pingValueEl.textContent = ping;
+        pingValueEl.style.color = 'white';
+        statusDot.classList.remove('active');
+        statusText.textContent = 'Bình thường - Ping thấp';
+        statusText.style.color = '#555';
+        toggleBtn.classList.remove('active');
+        btnLabel.textContent = 'BẬT';
+        downloadVal.textContent = randomFloat(20, 30) + ' Mbps';
+        uploadVal.textContent = randomFloat(10, 18) + ' Mbps';
+        // Ẩn nút nổi
+        if (floatingVisible) {
+          floatingBtn.classList.remove('active');
+          floatingVisible = false;
+        }
+      }
+    }
+
+    // --- Toggle action ---
+    function togglePing() {
+      if (!permissionGranted) {
+        // Yêu cầu quyền trước
+        permissionOverlay.style.display = 'flex';
+        return;
+      }
+      isHighPing = !isHighPing;
+      updateUI();
+      showToast(isHighPing ? 'Đã bật! Ping ~400ms' : 'Đã tắt! Ping bình thường');
+    }
+
+    // --- Permission handlers ---
+    function allowPermission() {
+      permissionGranted = true;
+      permissionOverlay.style.display = 'none';
+      showToast('Đã cấp quyền nút nổi!');
+      // Nếu đang bật chế độ ping cao -> hiện nút nổi
+      if (isHighPing && !floatingVisible) {
+        floatingBtn.classList.add('active');
+        floatingVisible = true;
+      }
+    }
+
+    function denyPermission() {
+      permissionGranted = false;
+      permissionOverlay.style.display = 'none';
+      showToast('Bạn cần cấp quyền để dùng nút nổi');
+      // Nếu đang bật thì tắt vì không có quyền
+      if (isHighPing) {
+        isHighPing = false;
+        updateUI();
+      }
+    }
+
+    // --- Floating button drag ---
+    floatingBtn.addEventListener('touchstart', function(e) {
+      if (!floatingVisible) return;
+      e.preventDefault();
+      const touch = e.touches[0];
+      floatStartX = touch.clientX;
+      floatStartY = touch.clientY;
+      const rect = floatingBtn.getBoundingClientRect();
+      floatInitialLeft = rect.left;
+      floatInitialTop = rect.top;
+      floatingDragging = true;
+      floatingBtn.style.transition = 'none';
+    });
+
+    floatingBtn.addEventListener('touchmove', function(e) {
+      if (!floatingDragging) return;
+      e.preventDefault();
+      const touch = e.touches[0];
+      const dx = touch.clientX - floatStartX;
+      const dy = touch.clientY - floatStartY;
+      let newLeft = floatInitialLeft + dx;
+      let newTop = floatInitialTop + dy;
+      // Giới hạn trong màn hình
+      newLeft = Math.max(0, Math.min(window.innerWidth - 56, newLeft));
+      newTop = Math.max(0, Math.min(window.innerHeight - 56, newTop));
+      floatingBtn.style.left = newLeft + 'px';
+      floatingBtn.style.top = newTop + 'px';
+      floatingBtn.style.right = 'auto';
+      floatingBtn.style.bottom = 'auto';
+    });
+
+    floatingBtn.addEventListener('touchend', function(e) {
+      floatingDragging = false;
+      floatingBtn.style.transition = 'background 0.3s';
+      // Nếu chỉ nhấn (không kéo) -> mở app? Ở đây chỉ làm toggle
+      if (Math.abs(floatStartX - (e.changedTouches[0]?.clientX || floatStartX)) < 5 &&
+          Math.abs(floatStartY - (e.changedTouches[0]?.clientY || floatStartY)) < 5) {
+        togglePing();
+      }
+    });
+
+    // Mouse events for desktop testing
+    floatingBtn.addEventListener('mousedown', function(e) {
+      if (!floatingVisible) return;
+      e.preventDefault();
+      floatStartX = e.clientX;
+      floatStartY = e.clientY;
+      const rect = floatingBtn.getBoundingClientRect();
+      floatInitialLeft = rect.left;
+      floatInitialTop = rect.top;
+      floatingDragging = true;
+      floatingBtn.style.transition = 'none';
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('mouseup', onMouseUp);
+    });
+
+    function onMouseMove(e) {
+      if (!floatingDragging) return;
+      const dx = e.clientX - floatStartX;
+      const dy = e.clientY - floatStartY;
+      let newLeft = floatInitialLeft + dx;
+      let newTop = floatInitialTop + dy;
+      newLeft = Math.max(0, Math.min(window.innerWidth - 56, newLeft));
+      newTop = Math.max(0, Math.min(window.innerHeight - 56, newTop));
+      floatingBtn.style.left = newLeft + 'px';
+      floatingBtn.style.top = newTop + 'px';
+      floatingBtn.style.right = 'auto';
+      floatingBtn.style.bottom = 'auto';
+    }
+
+    function onMouseUp(e) {
+      floatingDragging = false;
+      floatingBtn.style.transition = 'background 0.3s';
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+      if (Math.abs(floatStartX - e.clientX) < 3 && Math.abs(floatStartY - e.clientY) < 3) {
+        togglePing();
+      }
+    }
+
+    // --- Event listeners ---
+    toggleBtn.addEventListener('click', togglePing);
+    // Cũng cho phép nhấn vào nút nổi (touch) để toggle (đã xử lý trong touchend)
+
+    // --- Mô phỏng cập nhật ping mỗi giây ---
+    setInterval(() => {
+      if (isHighPing) {
+        pingValueEl.textContent = randomInt(380, 420);
+      } else {
+        pingValueEl.textContent = randomInt(20, 35);
+      }
+    }, 1000);
+
+    // --- Khởi tạo: yêu cầu quyền ngay khi load (giống app thật) ---
+    window.addEventListener('load', function() {
+      // Hiển thị dialog xin quyền sau 500ms
+      setTimeout(() => {
+        permissionOverlay.style.display = 'flex';
+      }, 500);
+    });
+
+    // --- Cập nhật lần đầu ---
+    updateUI();
+  </script>
+</body>
+</html>
